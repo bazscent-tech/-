@@ -10,6 +10,14 @@ let currentDetailId = null;
 let sliderIndex = 0;
 let sliderInterval = null;
 
+// Admin data
+let adminAds = JSON.parse(localStorage.getItem('admin_ads') || '[]');
+let adminOffers = JSON.parse(localStorage.getItem('admin_offers') || '[]');
+let adminJobs = JSON.parse(localStorage.getItem('admin_jobs') || '[]');
+let adminCourses = JSON.parse(localStorage.getItem('admin_courses') || '[]');
+let adminPending = JSON.parse(localStorage.getItem('admin_pending') || '[]');
+let adminApproved = JSON.parse(localStorage.getItem('admin_approved') || '[]');
+
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
@@ -23,7 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
 function initApp() {
     renderStats();
     renderCategoriesScroll();
-    renderCitiesScroll();
     renderFeaturedPlaces();
     renderLatestPlaces();
     renderCategoriesGrid();
@@ -31,24 +38,74 @@ function initApp() {
     updateBadges();
     initSlider();
     initSearch();
+    renderDynamicSections();
+    renderContentPages();
+    loadProfileImage();
 }
 
-// ===== SLIDER =====
+// ===== SLIDER (with Admin Ads) =====
 function initSlider() {
-    const slides = document.querySelectorAll('.slide');
+    const slider = document.getElementById('slider');
     const dotsContainer = document.getElementById('sliderDots');
-    slides.forEach((_, i) => {
+
+    // Build slides: default slides + admin ads
+    let slidesHTML = `
+        <div class="slide" style="background:linear-gradient(135deg,#1a73e8,#0d47a1)">
+            <div class="slide-content">
+                <h2>🇾🇪 أهلاً بكم في دليل اليمن</h2>
+                <p>اكتشف أفضل الأماكن والخدمات في جميع المحافظات</p>
+            </div>
+        </div>
+        <div class="slide" style="background:linear-gradient(135deg,#34a853,#1b5e20)">
+            <div class="slide-content">
+                <h2>📍 أكثر من 500 مكان مسجل</h2>
+                <p>مطاعم، فنادق، مقاهي، صيدليات والمزيد</p>
+            </div>
+        </div>
+        <div class="slide" style="background:linear-gradient(135deg,#ea4335,#b71c1c)">
+            <div class="slide-content">
+                <h2>📞 اتصل مباشرة</h2>
+                <p>تواصل مع التجار والخدمات بضغطة زر</p>
+            </div>
+        </div>`;
+
+    // Add admin ads as slides
+    const activeAds = adminAds.filter(a => a.active);
+    activeAds.forEach(ad => {
+        const linkAttr = ad.link ? `onclick="window.open('${ad.link}','_blank')" style="cursor:pointer"` : '';
+        slidesHTML += `
+        <div class="slide ad-slide" ${linkAttr}>
+            <img src="${ad.image}" alt="${ad.title}" class="ad-slide-img">
+            <div class="ad-slide-overlay">
+                <h2>${ad.title}</h2>
+                ${ad.link ? '<p>اضغط للمزيد ←</p>' : ''}
+            </div>
+        </div>`;
+    });
+
+    slider.innerHTML = slidesHTML;
+
+    // Build dots
+    const totalSlides = slider.querySelectorAll('.slide').length;
+    dotsContainer.innerHTML = '';
+    for (let i = 0; i < totalSlides; i++) {
         const dot = document.createElement('div');
         dot.className = `slider-dot ${i === 0 ? 'active' : ''}`;
         dot.onclick = () => goToSlide(i);
         dotsContainer.appendChild(dot);
-    });
-    sliderInterval = setInterval(() => goToSlide((sliderIndex + 1) % slides.length), 4000);
+    }
+
+    sliderIndex = 0;
+    if (sliderInterval) clearInterval(sliderInterval);
+    sliderInterval = setInterval(() => goToSlide((sliderIndex + 1) % totalSlides), 4000);
 }
 
 function goToSlide(index) {
     sliderIndex = index;
-    document.getElementById('slider').style.transform = `translateX(${index * 100}%)`;
+    const slider = document.getElementById('slider');
+    const slides = slider.querySelectorAll('.slide');
+    if (index >= slides.length) index = 0;
+    slider.style.transform = `translateX(${index * 100}%)`;
     document.querySelectorAll('.slider-dot').forEach((d, i) => d.classList.toggle('active', i === index));
 }
 
@@ -59,9 +116,7 @@ function initSearch() {
     input.addEventListener('input', (e) => {
         const q = e.target.value.trim();
         clear.style.display = q ? 'block' : 'none';
-        if (q.length >= 2) {
-            searchPlaces(q);
-        }
+        if (q.length >= 2) searchPlaces(q);
     });
 }
 
@@ -100,6 +155,7 @@ function renderCategoriesScroll() {
 
 function renderCitiesScroll() {
     const container = document.getElementById('citiesScroll');
+    if (!container) return;
     container.innerHTML = CITIES.slice(0, 10).map(c => `
         <div class="city-chip" onclick="showCityPlaces(${c.id})">${c.icon} ${c.name}</div>
     `).join('');
@@ -141,6 +197,133 @@ function renderCitiesGrid() {
     }).join('');
 }
 
+// ===== DYNAMIC SECTIONS (Offers, Jobs, Courses) =====
+function renderDynamicSections() {
+    renderContentScroll('offers', adminOffers, 'offersScroll', 'section-offers');
+    renderContentScroll('jobs', adminJobs, 'jobsScroll', 'section-jobs');
+    renderContentScroll('courses', adminCourses, 'coursesScroll', 'section-courses');
+}
+
+function renderContentScroll(type, items, containerId, sectionId) {
+    const section = document.getElementById(sectionId);
+    const container = document.getElementById(containerId);
+    if (!section || !container) return;
+
+    const activeItems = items.filter(i => i.active);
+    if (!activeItems.length) {
+        section.style.display = 'none';
+        return;
+    }
+    section.style.display = 'block';
+
+    container.innerHTML = activeItems.slice(0, 6).map(item => `
+        <div class="content-card" onclick="showContentDetail('${type}', ${item.id})">
+            ${item.image ? `<div class="content-card-img"><img src="${item.image}" alt="${item.title}" loading="lazy"></div>` : `<div class="content-card-img content-card-placeholder"><i class="fas ${type === 'offers' ? 'fa-tag' : type === 'jobs' ? 'fa-briefcase' : 'fa-graduation-cap'}"></i></div>`}
+            <div class="content-card-info">
+                <h4>${item.title}</h4>
+                ${item.city ? `<p><i class="fas fa-map-marker-alt"></i> ${item.city}</p>` : ''}
+                ${item.phone ? `<p><i class="fas fa-phone"></i> ${item.phone}</p>` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderContentPages() {
+    renderContentPageList('offers', adminOffers, 'offersPageList', 'emptyOffers');
+    renderContentPageList('jobs', adminJobs, 'jobsPageList', 'emptyJobs');
+    renderContentPageList('courses', adminCourses, 'coursesPageList', 'emptyCourses');
+}
+
+function renderContentPageList(type, items, listId, emptyId) {
+    const list = document.getElementById(listId);
+    const empty = document.getElementById(emptyId);
+    if (!list) return;
+
+    const activeItems = items.filter(i => i.active);
+    if (!activeItems.length) {
+        list.innerHTML = '';
+        if (empty) empty.style.display = 'block';
+        return;
+    }
+    if (empty) empty.style.display = 'none';
+
+    list.innerHTML = activeItems.map(item => `
+        <div class="content-full-card" onclick="showContentDetail('${type}', ${item.id})">
+            ${item.image ? `<div class="content-full-img"><img src="${item.image}" alt="${item.title}" loading="lazy"></div>` : ''}
+            <div class="content-full-info">
+                <h3>${item.title}</h3>
+                ${item.desc ? `<p class="content-full-desc">${item.desc}</p>` : ''}
+                <div class="content-full-meta">
+                    ${item.city ? `<span><i class="fas fa-map-marker-alt"></i> ${item.city}</span>` : ''}
+                    ${item.category ? `<span><i class="fas fa-tag"></i> ${item.category}</span>` : ''}
+                    ${item.phone ? `<span><i class="fas fa-phone"></i> ${item.phone}</span>` : ''}
+                </div>
+                ${item.link ? `<a href="${item.link}" target="_blank" class="content-full-link"><i class="fas fa-external-link-alt"></i> زيارة الرابط</a>` : ''}
+                ${item.phone ? `<a href="tel:${item.phone}" class="content-full-call"><i class="fas fa-phone"></i> اتصال</a>` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+function showContentPage(type) {
+    showPage(type);
+}
+
+function showContentDetail(type, id) {
+    const storeMap = { offers: adminOffers, jobs: adminJobs, courses: adminCourses };
+    const item = (storeMap[type] || []).find(i => i.id === id);
+    if (!item) return;
+
+    // Show in a simple detail view using the detail page
+    showPage('detail');
+    document.getElementById('detailHeader').style.background = `linear-gradient(135deg,#1565c0,#0d47a1)`;
+    document.getElementById('detailHeader').innerHTML = `
+        <button class="back-btn white" onclick="goBack()"><i class="fas fa-arrow-right"></i></button>
+        <div class="detail-header-actions">
+            ${item.link ? `<a href="${item.link}" target="_blank" class="icon-btn white"><i class="fas fa-external-link-alt"></i></a>` : ''}
+        </div>`;
+
+    const typeLabel = type === 'offers' ? 'عرض' : type === 'jobs' ? 'وظيفة' : 'دورة';
+    const typeIcon = type === 'offers' ? 'fa-tag' : type === 'jobs' ? 'fa-briefcase' : 'fa-graduation-cap';
+
+    document.getElementById('detailContent').innerHTML = `
+        <h2 class="detail-title">${item.title}</h2>
+        <span class="detail-cat" style="background:#e3f2fd;color:#1565c0"><i class="fas ${typeIcon}"></i> ${typeLabel}</span>
+        ${item.category ? `<span class="detail-cat" style="background:#f3e5f5;color:#7b1fa2">${item.category}</span>` : ''}
+        ${item.desc ? `<p class="detail-desc">${item.desc}</p>` : ''}
+        ${item.image ? `<div style="margin-bottom:20px;border-radius:12px;overflow:hidden"><img src="${item.image}" style="width:100%;max-height:300px;object-fit:cover" alt="${item.title}"></div>` : ''}
+        <div class="detail-info">
+            ${item.city ? `<div class="detail-info-item">
+                <div class="detail-info-icon" style="background:#e3f2fd;color:#1565c0"><i class="fas fa-map-marker-alt"></i></div>
+                <div class="detail-info-text"><small>المدينة</small><b>${item.city}</b></div>
+            </div>` : ''}
+            ${item.phone ? `<div class="detail-info-item">
+                <div class="detail-info-icon" style="background:#e8f5e9;color:#2e7d32"><i class="fas fa-phone"></i></div>
+                <div class="detail-info-text"><small>رقم التواصل</small><b>${item.phone}</b></div>
+                <a href="tel:${item.phone}" class="detail-info-action"><i class="fas fa-phone"></i></a>
+            </div>` : ''}
+        </div>
+        <div class="detail-buttons">
+            ${item.phone ? `<a href="tel:${item.phone}" class="detail-btn call"><i class="fas fa-phone"></i> اتصال</a>` : ''}
+            ${item.link ? `<a href="${item.link}" target="_blank" class="detail-btn whatsapp" style="background:#e3f2fd;color:#1565c0"><i class="fas fa-external-link-alt"></i> زيارة</a>` : ''}
+            <button class="detail-btn share" onclick="shareContent('${type}',${id})"><i class="fas fa-share-alt"></i> مشاركة</button>
+        </div>`;
+}
+
+function shareContent(type, id) {
+    const storeMap = { offers: adminOffers, jobs: adminJobs, courses: adminCourses };
+    const item = (storeMap[type] || []).find(i => i.id === id);
+    if (!item) return;
+    const typeLabel = type === 'offers' ? 'عرض' : type === 'jobs' ? 'وظيفة' : 'دورة';
+    const text = `🏷️ ${typeLabel}: ${item.title}\n${item.desc || ''}\n${item.phone ? '📞 ' + item.phone : ''}\n${item.link || ''}`;
+    if (navigator.share) {
+        navigator.share({ title: item.title, text, url: location.href });
+    } else {
+        navigator.clipboard.writeText(text).then(() => showToast('تم نسخ المعلومات 📋'));
+    }
+}
+
+// ===== PLACES LIST =====
 function renderPlacesList(containerId, places) {
     const container = document.getElementById(containerId);
     if (!places.length) {
@@ -204,6 +387,14 @@ function showHome() {
     document.querySelectorAll('.nav-item').forEach((n, i) => n.classList.toggle('active', i === 0));
     document.getElementById('searchInput').value = '';
     document.getElementById('searchClear').style.display = 'none';
+
+    // Refresh dynamic content
+    adminAds = JSON.parse(localStorage.getItem('admin_ads') || '[]');
+    adminOffers = JSON.parse(localStorage.getItem('admin_offers') || '[]');
+    adminJobs = JSON.parse(localStorage.getItem('admin_jobs') || '[]');
+    adminCourses = JSON.parse(localStorage.getItem('admin_courses') || '[]');
+    initSlider();
+    renderDynamicSections();
 }
 
 function showCategories() {
@@ -213,7 +404,6 @@ function showCategories() {
 
 function showCities() {
     showPage('cities');
-    document.querySelectorAll('.nav-item')[3].classList.add('active');
 }
 
 function showFavorites() {
@@ -237,6 +427,7 @@ function showProfile() {
     document.querySelectorAll('.nav-item')[4].classList.add('active');
     document.getElementById('profileFavCount').textContent = favorites.length;
     document.getElementById('profilePlaceCount').textContent = myPlaces.length;
+    loadProfileImage();
 }
 
 function showNotifications() { showPage('notifications'); }
@@ -312,9 +503,8 @@ function showPlaceDetail(id) {
     }
 
     // Build phone numbers HTML
-    let phonesHTML = '';
     const phones = p.phones || [{ type: 'هاتف', number: p.phone }];
-    phonesHTML = phones.map(ph => `
+    const phonesHTML = phones.map(ph => `
         <div class="detail-info-item">
             <div class="detail-info-icon" style="background:#e8f5e9;color:#2e7d32"><i class="fas fa-phone"></i></div>
             <div class="detail-info-text"><small>${ph.type || 'هاتف'}</small><b>${ph.number}</b></div>
@@ -415,42 +605,24 @@ function shareFromDetail() {
 function handleImageUpload(input, previewId, callback) {
     const file = input.files[0];
     if (!file) return;
-
-    // Validate type
     const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (!validTypes.includes(file.type)) {
-        showToast('نوع الملف غير مدعوم. استخدم JPG أو PNG أو WebP');
-        return;
-    }
-
-    // Max 5MB
-    if (file.size > 5 * 1024 * 1024) {
-        showToast('حجم الصورة كبير جداً. الحد الأقصى 5MB');
-        return;
-    }
+    if (!validTypes.includes(file.type)) { showToast('نوع الملف غير مدعوم'); return; }
+    if (file.size > 5 * 1024 * 1024) { showToast('حجم الصورة كبير جداً (max 5MB)'); return; }
 
     const reader = new FileReader();
     reader.onload = function(e) {
-        // Compress and resize
         const img = new Image();
         img.onload = function() {
             const canvas = document.createElement('canvas');
             const maxSize = 800;
-            let w = img.width;
-            let h = img.height;
-
+            let w = img.width, h = img.height;
             if (w > maxSize || h > maxSize) {
                 if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
                 else { w = Math.round(w * maxSize / h); h = maxSize; }
             }
-
-            canvas.width = w;
-            canvas.height = h;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, w, h);
-
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
             const compressed = canvas.toDataURL('image/jpeg', 0.8);
-
             if (previewId) {
                 const preview = document.getElementById(previewId);
                 if (preview) {
@@ -458,7 +630,6 @@ function handleImageUpload(input, previewId, callback) {
                     preview.classList.add('has-image');
                 }
             }
-
             if (callback) callback(compressed);
         };
         img.src = e.target.result;
@@ -466,35 +637,27 @@ function handleImageUpload(input, previewId, callback) {
     reader.readAsDataURL(file);
 }
 
-// Multi-image upload for business gallery
 let uploadedImages = [];
 
 function handleMultiImageUpload(input) {
     const files = Array.from(input.files);
     const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
-
     files.forEach(file => {
         if (!validTypes.includes(file.type)) return;
         if (file.size > 5 * 1024 * 1024) return;
-        if (uploadedImages.length >= 8) {
-            showToast('الحد الأقصى 8 صور');
-            return;
-        }
-
+        if (uploadedImages.length >= 8) { showToast('الحد الأقصى 8 صور'); return; }
         const reader = new FileReader();
         reader.onload = function(e) {
             const img = new Image();
             img.onload = function() {
                 const canvas = document.createElement('canvas');
                 const maxSize = 800;
-                let w = img.width;
-                let h = img.height;
+                let w = img.width, h = img.height;
                 if (w > maxSize || h > maxSize) {
                     if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
                     else { w = Math.round(w * maxSize / h); h = maxSize; }
                 }
-                canvas.width = w;
-                canvas.height = h;
+                canvas.width = w; canvas.height = h;
                 canvas.getContext('2d').drawImage(img, 0, 0, w, h);
                 uploadedImages.push(canvas.toDataURL('image/jpeg', 0.8));
                 renderImagePreviews();
@@ -521,11 +684,10 @@ function removeUploadedImage(index) {
     renderImagePreviews();
 }
 
-// ===== ADD PLACE =====
+// ===== ADD PLACE (Send to Admin for Review) =====
 function submitNewPlace(e) {
     e.preventDefault();
 
-    // Collect phone numbers
     const phoneEntries = document.querySelectorAll('.phone-entry');
     const phones = [];
     phoneEntries.forEach(entry => {
@@ -534,7 +696,6 @@ function submitNewPlace(e) {
         if (number) phones.push({ type, number });
     });
 
-    // Collect social links
     const social = {};
     const fbVal = document.getElementById('addFacebook')?.value?.trim();
     const igVal = document.getElementById('addInstagram')?.value?.trim();
@@ -570,24 +731,18 @@ function submitNewPlace(e) {
         lng: 0,
         social: Object.keys(social).length ? social : null,
         images: uploadedImages.length ? [...uploadedImages] : [],
-        profileImage: null
+        status: 'pending',
+        submittedAt: new Date().toISOString()
     };
 
-    // Handle profile image if set
-    const profilePreview = document.getElementById('placeProfilePreview');
-    if (profilePreview && profilePreview.classList.contains('has-image')) {
-        const img = profilePreview.querySelector('img');
-        if (img) newPlace.profileImage = img.src;
-    }
+    // Send to admin pending queue
+    const pending = JSON.parse(localStorage.getItem('admin_pending') || '[]');
+    pending.push(newPlace);
+    localStorage.setItem('admin_pending', JSON.stringify(pending));
 
-    myPlaces.push(newPlace);
-    localStorage.setItem('yd_my_places', JSON.stringify(myPlaces));
     uploadedImages = [];
     document.getElementById('addForm').reset();
-    showToast('تم إضافة المكان بنجاح! ✅');
-    renderStats();
-    renderCategoriesGrid();
-    renderCitiesGrid();
+    showToast('تم إرسال طلبك! ⏳ سيتم مراجعته من الإدارة');
     showHome();
 }
 
@@ -598,7 +753,6 @@ function addPhoneField() {
     phoneCounter++;
     const container = document.getElementById('phoneFields');
     if (!container) return;
-
     const div = document.createElement('div');
     div.className = 'phone-entry';
     div.id = `phone-entry-${phoneCounter}`;
@@ -636,7 +790,6 @@ function uploadProfileImage() {
     input.click();
 }
 
-// Load profile image on init
 function loadProfileImage() {
     const saved = localStorage.getItem('yd_profile_image');
     if (saved) {
@@ -666,3 +819,14 @@ function showToast(msg) {
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 3000);
 }
+
+// ===== POLL FOR ADMIN CHANGES =====
+setInterval(() => {
+    const newApproved = JSON.parse(localStorage.getItem('admin_approved') || '[]');
+    if (JSON.stringify(newApproved) !== JSON.stringify(adminApproved)) {
+        adminApproved = newApproved;
+        myPlaces = JSON.parse(localStorage.getItem('yd_my_places') || '[]');
+        renderFeaturedPlaces();
+        renderLatestPlaces();
+    }
+}, 3000);

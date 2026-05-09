@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم دليل اليمن - Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Tajawal',sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh}
+
+        /* Sidebar */
+        .sidebar{position:fixed;right:0;top:0;width:260px;height:100vh;background:linear-gradient(180deg,#1a1a2e,#16213e);color:#fff;padding:24px 0;z-index:100;overflow-y:auto;transition:.3s}
+        .sidebar-logo{text-align:center;padding:0 20px 30px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:20px}
+        .sidebar-logo h2{font-size:20px;font-weight:900}
+        .sidebar-logo p{font-size:12px;opacity:.6;margin-top:4px}
+        .sidebar-nav a{display:flex;align-items:center;gap:12px;padding:14px 24px;color:rgba(255,255,255,.7);font-size:14px;font-weight:500;transition:.2s;text-decoration:none;border-right:3px solid transparent}
+        .sidebar-nav a:hover,.sidebar-nav a.active{background:rgba(255,255,255,.08);color:#fff;border-right-color:#4fc3f7}
+        .sidebar-nav a i{width:20px;text-align:center;font-size:16px}
+        .sidebar-nav .badge-count{margin-right:auto;background:#ff1744;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;min-width:20px;text-align:center}
+
+        /* Main Content */
+        .main{margin-right:260px;padding:24px;min-height:100vh}
+        .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+        .topbar h1{font-size:24px;font-weight:800;color:#1a1a2e}
+        .topbar-actions{display:flex;gap:10px}
+
+        /* Cards */
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+        .stat-card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.06);display:flex;align-items:center;gap:16px}
+        .stat-icon{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff}
+        .stat-info h3{font-size:28px;font-weight:900;color:#1a1a2e}
+        .stat-info p{font-size:13px;color:#757575}
+
+        /* Table */
+        .card{background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);overflow:hidden;margin-bottom:24px}
+        .card-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #f0f0f0}
+        .card-header h3{font-size:16px;font-weight:700}
+        .card-body{padding:20px}
+
+        table{width:100%;border-collapse:collapse}
+        th,td{padding:12px 16px;text-align:right;font-size:13px;border-bottom:1px solid #f5f5f5}
+        th{background:#fafafa;font-weight:700;color:#424242;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+        tr:hover{background:#f9f9f9}
+
+        /* Badges */
+        .badge-status{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700}
+        .badge-pending{background:#fff3e0;color:#ef6c00}
+        .badge-approved{background:#e8f5e9;color:#2e7d32}
+        .badge-rejected{background:#ffebee;color:#c62828}
+        .badge-suspended{background:#f3e5f5;color:#7b1fa2}
+
+        /* Buttons */
+        .btn{padding:8px 16px;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px}
+        .btn:active{transform:scale(.95)}
+        .btn-approve{background:#e8f5e9;color:#2e7d32}
+        .btn-approve:hover{background:#c8e6c9}
+        .btn-reject{background:#ffebee;color:#c62828}
+        .btn-reject:hover{background:#ffcdd2}
+        .btn-suspend{background:#fff3e0;color:#ef6c00}
+        .btn-suspend:hover{background:#ffe0b2}
+        .btn-delete{background:#f5f5f5;color:#616161}
+        .btn-delete:hover{background:#e0e0e0}
+        .btn-primary{background:linear-gradient(135deg,#1565c0,#0d47a1);color:#fff}
+        .btn-primary:hover{box-shadow:0 4px 12px rgba(21,101,192,.3)}
+        .btn-success{background:#e8f5e9;color:#2e7d32}
+        .btn-sm{padding:6px 12px;font-size:11px}
+
+        /* Actions */
+        .actions{display:flex;gap:6px;flex-wrap:wrap}
+
+        /* Forms */
+        .form-group{margin-bottom:16px}
+        .form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#424242}
+        .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;font-family:inherit;transition:.2s;background:#fafafa}
+        .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:#1565c0;outline:none;background:#fff}
+        .form-group textarea{resize:vertical;min-height:80px}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+        /* Ad Upload */
+        .ad-upload-zone{border:2px dashed #e0e0e0;border-radius:12px;padding:30px;text-align:center;cursor:pointer;transition:.2s;background:#fafafa;margin-bottom:16px}
+        .ad-upload-zone:hover{border-color:#1565c0;background:#e3f2fd}
+        .ad-upload-zone i{font-size:36px;color:#bdbdbd;margin-bottom:8px;display:block}
+        .ad-upload-zone input{display:none}
+        .ad-preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+        .ad-preview-item{position:relative;border-radius:12px;overflow:hidden;background:#f0f0f0;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+        .ad-preview-item img{width:100%;height:140px;object-fit:cover}
+        .ad-preview-item .ad-info{padding:10px}
+        .ad-preview-item .ad-info h4{font-size:13px;font-weight:700;margin-bottom:4px}
+        .ad-preview-item .ad-info p{font-size:11px;color:#757575;word-break:break-all}
+        .ad-preview-item .ad-remove{position:absolute;top:6px;left:6px;width:28px;height:28px;border-radius:50%;background:rgba(255,23,68,.9);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px}
+
+        /* Tabs */
+        .tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid #f0f0f0;padding-bottom:0}
+        .tab{padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;color:#757575;border-bottom:2px solid transparent;margin-bottom:-2px;transition:.2s}
+        .tab.active{color:#1565c0;border-bottom-color:#1565c0}
+        .tab:hover{color:#1565c0}
+
+        /* Modal */
+        .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center}
+        .modal-overlay.show{display:flex}
+        .modal{background:#fff;border-radius:20px;width:90%;max-width:500px;max-height:90vh;overflow-y:auto;padding:24px}
+        .modal h3{font-size:18px;font-weight:800;margin-bottom:16px}
+        .modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-start}
+
+        /* Toast */
+        .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#323232;color:#fff;padding:12px 24px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
+        .toast.show{opacity:1}
+
+        /* Empty */
+        .empty{text-align:center;padding:40px;color:#9e9e9e}
+        .empty i{font-size:48px;margin-bottom:12px;opacity:.5}
+        .empty p{font-size:14px}
+
+        /* Responsive */
+        @media(max-width:768px){
+            .sidebar{width:0;transform:translateX(100%)}
+            .sidebar.open{width:260px;transform:translateX(0)}
+            .main{margin-right:0}
+            .stats-grid{grid-template-columns:1fr 1fr}
+            .form-row{grid-template-columns:1fr}
+            .ad-preview-grid{grid-template-columns:1fr 1fr}
+            table{font-size:11px}
+            th,td{padding:8px 10px}
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <h2>🇾🇪 دليل اليمن</h2>
+            <p>لوحة التحكم</p>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" class="active" onclick="showSection('dashboard');return false"><i class="fas fa-chart-pie"></i> الرئيسية</a>
+            <a href="#" onclick="showSection('pending');return false"><i class="fas fa-clock"></i> طلبات المراجعة <span class="badge-count" id="pendingBadge">0</span></a>
+            <a href="#" onclick="showSection('places');return false"><i class="fas fa-store"></i> جميع الأماكن</a>
+            <a href="#" onclick="showSection('ads');return false"><i class="fas fa-bullhorn"></i> الإعلانات</a>
+            <a href="#" onclick="showSection('offers');return false"><i class="fas fa-tag"></i> العروض</a>
+            <a href="#" onclick="showSection('jobs');return false"><i class="fas fa-briefcase"></i> الوظائف</a>
+            <a href="#" onclick="showSection('courses');return false"><i class="fas fa-graduation-cap"></i> الدورات</a>
+            <a href="#" onclick="showSection('settings');return false"><i class="fas fa-cog"></i> الإعدادات</a>
+            <a href="index.html" style="margin-top:20px;border-top:1px solid rgba(255,255,255,.1);padding-top:20px"><i class="fas fa-external-link-alt"></i> عرض الموقع</a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Dashboard Section -->
+        <div id="sec-dashboard" class="section-content">
+            <div class="topbar">
+                <h1>لوحة التحكم</h1>
+                <div class="topbar-actions">
+                    <button class="btn btn-primary" onclick="showSection('ads')"><i class="fas fa-plus"></i> إعلان جديد</button>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:linear-gradient(135deg,#1565c0,#0d47a1)"><i class="fas fa-store"></i></div>
+                    <div class="stat-info"><h3 id="statTotal">0</h3><p>إجمالي الأماكن</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:linear-gradient(135deg,#ef6c00,#e65100)"><i class="fas fa-clock"></i></div>
+                    <div class="stat-info"><h3 id="statPending">0</h3><p>قيد المراجعة</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:linear-gradient(135deg,#2e7d32,#1b5e20)"><i class="fas fa-check-circle"></i></div>
+                    <div class="stat-info"><h3 id="statApproved">0</h3><p>معتمدة</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:linear-gradient(135deg,#c62828,#b71c1c)"><i class="fas fa-bullhorn"></i></div>
+                    <div class="stat-info"><h3 id="statAds">0</h3><p>إعلانات نشطة</p></div>
+                </div>
+            </div>
+
+            <!-- Recent Pending -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-clock" style="color:#ef6c00"></i> أحدث الطلبات المعلقة</h3>
+                    <button class="btn btn-sm btn-primary" onclick="showSection('pending')">عرض الكل</button>
+                </div>
+                <div class="card-body" id="recentPending"></div>
+            </div>
+        </div>
+
+        <!-- Pending Section -->
+        <div id="sec-pending" class="section-content" style="display:none">
+            <div class="topbar">
+                <h1>طلبات المراجعة</h1>
+            </div>
+            <div class="card">
+                <div class="card-body" id="pendingTable"></div>
+            </div>
+        </div>
+
+        <!-- All Places Section -->
+        <div id="sec-places" class="section-content" style="display:none">
+            <div class="topbar">
+                <h1>جميع الأماكن</h1>
+            </div>
+            <div class="card">
+                <div class="card-body" id="allPlacesTable"></div>
+            </div>
+        </div>
+
+        <!-- Ads Section -->
+        <div id="sec-ads" class="section-content" style="display:none">
+            <div class="topbar">
+                <h1>إدارة الإعلانات</h1>
+                <button class="btn btn-primary" onclick="showAddAdModal()"><i class="fas fa-plus"></i> إعلان جديد</button>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <p style="font-size:13px;color:#757575;margin-bottom:16px">الإعلانات تظهر في السلايدر المتحرك في الصفحة الرئيسية. يمكن رفع حتى 10 صور.</p>
+                    <div class="ad-preview-grid" id="adsGrid"></div>
+                    <div class="empty" id="emptyAds" style="display:none">
+                        <i class="fas fa-bullhorn"></i>
+                        <p>لا توجد إعلانات</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Offers Section -->
+        <div id="sec-offers" class="section-content" style="display:none">
+            <div class="topbar">
+                <h1>إدارة العروض</h1>
+                <button class="btn btn-primary" onclick="showAddContentModal('offer')"><i class="fas fa-plus"></i> عرض جديد</button>
+            </div>
+            <div class="card">
+                <div class="card-body" id="offersTable"></div>
+            </div>
+        </div>
+
+        <!-- Jobs Section -->
+        <div id="sec-jobs" class="section-content" style="display:none">
+            <div class="topbar">
+                <h1>إدارة الوظائف</h1>
+                <button class="btn btn-primary" onclick="showAddContentModal('job')"><i class="fas fa-plus"></i> وظيفة جديدة</button>
+            </div>
+            <div class="card">
+                <div class="card-body" id="jobsTable"></div>
+            </div>
+        </div>
+
+        <!-- Courses Section -->
+        <div id="sec-courses" class="section-content" style="display:none">
+            <div class="topbar">
+                <h1>إدارة الدورات</h1>
+                <button class="btn btn-primary" onclick="showAddContentModal('course')"><i class="fas fa-plus"></i> دورة جديدة</button>
+            </div>
+            <div class="card">
+                <div class="card-body" id="coursesTable"></div>
+            </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div id="sec-settings" class="section-content" style="display:none">
+            <div class="topbar">
+                <h1>الإعدادات</h1>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>كلمة مرور الأدمن</label>
+                        <input type="password" id="adminPassword" value="admin123" placeholder="كلمة المرور">
+                    </div>
+                    <button class="btn btn-primary" onclick="saveSettings()"><i class="fas fa-save"></i> حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Ad Modal -->
+    <div class="modal-overlay" id="adModal">
+        <div class="modal">
+            <h3><i class="fas fa-bullhorn" style="color:#1565c0"></i> إضافة إعلان</h3>
+            <div class="form-group">
+                <label>عنوان الإعلان *</label>
+                <input type="text" id="adTitle" placeholder="مثال: خصم 50% على المطاعم">
+            </div>
+            <div class="form-group">
+                <label>رابط الانتقال</label>
+                <input type="url" id="adLink" placeholder="https://example.com/offer">
+            </div>
+            <div class="form-group">
+                <label>صورة الإعلان *</label>
+                <div class="ad-upload-zone" onclick="document.getElementById('adImageInput').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>اضغط لرفع الصورة</p>
+                    <small>JPG, PNG, WebP</small>
+                    <input type="file" id="adImageInput" accept="image/jpeg,image/png,image/webp" onchange="previewAdImage(this)">
+                </div>
+                <div id="adImagePreview" style="display:none;text-align:center;margin-top:10px">
+                    <img id="adPreviewImg" style="max-width:100%;max-height:200px;border-radius:10px">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="saveAd()"><i class="fas fa-save"></i> حفظ</button>
+                <button class="btn btn-delete" onclick="closeModal('adModal')">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Content Modal (Offers/Jobs/Courses) -->
+    <div class="modal-overlay" id="contentModal">
+        <div class="modal">
+            <h3 id="contentModalTitle">إضافة</h3>
+            <div class="form-group">
+                <label>العنوان *</label>
+                <input type="text" id="contentTitle" placeholder="العنوان">
+            </div>
+            <div class="form-group">
+                <label>الوصف</label>
+                <textarea id="contentDesc" rows="3" placeholder="الوصف التفصيلي"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>التصنيف</label>
+                    <select id="contentCategory">
+                        <option value="">اختر</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>المدينة</label>
+                    <select id="contentCity">
+                        <option value="">اختر</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>رقم التواصل</label>
+                <input type="tel" id="contentPhone" placeholder="777123456">
+            </div>
+            <div class="form-group">
+                <label>رابط خارجي</label>
+                <input type="url" id="contentLink" placeholder="https://...">
+            </div>
+            <div class="form-group">
+                <label>صورة</label>
+                <div class="ad-upload-zone" onclick="document.getElementById('contentImageInput').click()">
+                    <i class="fas fa-image"></i>
+                    <p>اضغط لرفع صورة</p>
+                    <input type="file" id="contentImageInput" accept="image/jpeg,image/png,image/webp" onchange="previewContentImage(this)">
+                </div>
+                <div id="contentImagePreview" style="display:none;text-align:center;margin-top:10px">
+                    <img id="contentPreviewImg" style="max-width:100%;max-height:150px;border-radius:10px">
+                </div>
+            </div>
+            <input type="hidden" id="contentType">
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="saveContent()"><i class="fas fa-save"></i> حفظ</button>
+                <button class="btn btn-delete" onclick="closeModal('contentModal')">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ===== DATA MANAGEMENT =====
+        // All data is stored in localStorage and synced with the main site
+
+        function getAdminData(key, fallback) {
+            try { return JSON.parse(localStorage.getItem(key)) || fallback; }
+            catch { return fallback; }
+        }
+        function setAdminData(key, val) {
+            localStorage.setItem(key, JSON.stringify(val));
+        }
+
+        // Load data
+        let pendingPlaces = getAdminData('admin_pending', []);
+        let approvedPlaces = getAdminData('admin_approved', []); // This syncs with main site's myPlaces
+        let rejectedPlaces = getAdminData('admin_rejected', []);
+        let suspendedPlaces = getAdminData('admin_suspended', []);
+        let ads = getAdminData('admin_ads', []);
+        let offers = getAdminData('admin_offers', []);
+        let jobs = getAdminData('admin_jobs', []);
+        let courses = getAdminData('admin_courses', []);
+
+        // ===== INIT =====
+        function init() {
+            renderDashboard();
+            renderPending();
+            renderAllPlaces();
+            renderAds();
+            renderOffers();
+            renderJobs();
+            renderCourses();
+            populateSelects();
+        }
+
+        // ===== NAVIGATION =====
+        function showSection(name) {
+            document.querySelectorAll('.section-content').forEach(s => s.style.display = 'none');
+            document.getElementById(`sec-${name}`).style.display = 'block';
+            document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+            event?.target?.closest('a')?.classList.add('active');
+        }
+
+        // ===== DASHBOARD =====
+        function renderDashboard() {
+            const allPlaces = [...pendingPlaces, ...approvedPlaces, ...suspendedPlaces];
+            document.getElementById('statTotal').textContent = allPlaces.length;
+            document.getElementById('statPending').textContent = pendingPlaces.length;
+            document.getElementById('statApproved').textContent = approvedPlaces.length;
+            document.getElementById('statAds').textContent = ads.length;
+            document.getElementById('pendingBadge').textContent = pendingPlaces.length;
+
+            // Recent pending
+            const recent = pendingPlaces.slice(-5).reverse();
+            document.getElementById('recentPending').innerHTML = recent.length ?
+                buildPlacesTable(recent, 'pending') :
+                '<div class="empty"><i class="fas fa-check-circle"></i><p>لا توجد طلبات معلقة</p></div>';
+        }
+
+        // ===== PLACES TABLE =====
+        function buildPlacesTable(places, mode) {
+            if (!places.length) return '<div class="empty"><i class="fas fa-inbox"></i><p>لا توجد بيانات</p></div>';
+            return `<table>
+                <thead><tr>
+                    <th>الاسم</th><th>التصنيف</th><th>المدينة</th><th>الهاتف</th><th>التقييم</th><th>الحالة</th><th>إجراءات</th>
+                </tr></thead>
+                <tbody>${places.map(p => `<tr>
+                    <td><strong>${p.name}</strong></td>
+                    <td>${p.cat}</td>
+                    <td>${p.city}</td>
+                    <td dir="ltr">${p.phone}</td>
+                    <td>⭐ ${p.rating || 0}</td>
+                    <td>${getStatusBadge(p.status || (mode === 'pending' ? 'pending' : 'approved'))}</td>
+                    <td><div class="actions">
+                        ${mode === 'pending' ? `
+                            <button class="btn btn-approve btn-sm" onclick="approvePlace(${p.id})"><i class="fas fa-check"></i> قبول</button>
+                            <button class="btn btn-reject btn-sm" onclick="rejectPlace(${p.id})"><i class="fas fa-times"></i> رفض</button>
+                        ` : mode === 'approved' ? `
+                            <button class="btn btn-suspend btn-sm" onclick="suspendPlace(${p.id})"><i class="fas fa-pause"></i> تعليق</button>
+                            <button class="btn btn-reject btn-sm" onclick="rejectPlace(${p.id})"><i class="fas fa-times"></i> إيقاف</button>
+                        ` : mode === 'suspended' ? `
+                            <button class="btn btn-approve btn-sm" onclick="approvePlace(${p.id})"><i class="fas fa-check"></i> تفعيل</button>
+                            <button class="btn btn-reject btn-sm" onclick="rejectPlace(${p.id})"><i class="fas fa-times"></i> إيقاف نهائي</button>
+                        ` : `
+                            <button class="btn btn-approve btn-sm" onclick="approvePlace(${p.id})"><i class="fas fa-check"></i> إعادة</button>
+                            <button class="btn btn-delete btn-sm" onclick="deletePlace(${p.id})"><i class="fas fa-trash"></i></button>
+                        `}
+                    </div></td>
+                </tr>`).join('')}</tbody>
+            </table>`;
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                pending: '<span class="badge-status badge-pending"><i class="fas fa-clock"></i> معلق</span>',
+                approved: '<span class="badge-status badge-approved"><i class="fas fa-check"></i> معتمد</span>',
+                rejected: '<span class="badge-status badge-rejected"><i class="fas fa-times"></i> مرفوض</span>',
+                suspended: '<span class="badge-status badge-suspended"><i class="fas fa-pause"></i> معلّق</span>'
+            };
+            return map[status] || map.pending;
+        }
+
+        // ===== PLACE ACTIONS =====
+        function approvePlace(id) {
+            let place = pendingPlaces.find(p => p.id === id) || suspendedPlaces.find(p => p.id === id) || rejectedPlaces.find(p => p.id === id);
+            if (!place) return;
+
+            place.status = 'approved';
+            pendingPlaces = pendingPlaces.filter(p => p.id !== id);
+            suspendedPlaces = suspendedPlaces.filter(p => p.id !== id);
+            rejectedPlaces = rejectedPlaces.filter(p => p.id !== id);
+
+            if (!approvedPlaces.find(p => p.id === id)) {
+                approvedPlaces.push(place);
+            } else {
+                const idx = approvedPlaces.findIndex(p => p.id === id);
+                approvedPlaces[idx] = place;
+            }
+
+            saveAll();
+            renderDashboard(); renderPending(); renderAllPlaces();
+            showToast('تم اعتماد المكان ✅');
+        }
+
+        function rejectPlace(id) {
+            let place = pendingPlaces.find(p => p.id === id) || approvedPlaces.find(p => p.id === id) || suspendedPlaces.find(p => p.id === id);
+            if (!place) return;
+
+            place.status = 'rejected';
+            pendingPlaces = pendingPlaces.filter(p => p.id !== id);
+            approvedPlaces = approvedPlaces.filter(p => p.id !== id);
+            suspendedPlaces = suspendedPlaces.filter(p => p.id !== id);
+
+            if (!rejectedPlaces.find(p => p.id === id)) rejectedPlaces.push(place);
+
+            saveAll();
+            renderDashboard(); renderPending(); renderAllPlaces();
+            showToast('تم رفض/إيقاف المكان');
+        }
+
+        function suspendPlace(id) {
+            let place = approvedPlaces.find(p => p.id === id);
+            if (!place) return;
+
+            place.status = 'suspended';
+            approvedPlaces = approvedPlaces.filter(p => p.id !== id);
+            if (!suspendedPlaces.find(p => p.id === id)) suspendedPlaces.push(place);
+
+            saveAll();
+            renderDashboard(); renderPending(); renderAllPlaces();
+            showToast('تم تعليق المكان');
+        }
+
+        function deletePlace(id) {
+            if (!confirm('هل أنت متأكد من الحذف؟')) return;
+            pendingPlaces = pendingPlaces.filter(p => p.id !== id);
+            approvedPlaces = approvedPlaces.filter(p => p.id !== id);
+            rejectedPlaces = rejectedPlaces.filter(p => p.id !== id);
+            suspendedPlaces = suspendedPlaces.filter(p => p.id !== id);
+            saveAll();
+            renderDashboard(); renderPending(); renderAllPlaces();
+            showToast('تم حذف المكان');
+        }
+
+        function renderPending() {
+            document.getElementById('pendingTable').innerHTML = buildPlacesTable(pendingPlaces, 'pending');
+        }
+
+        function renderAllPlaces() {
+            const all = [
+                ...approvedPlaces.map(p => ({...p, _status: 'approved'})),
+                ...suspendedPlaces.map(p => ({...p, _status: 'suspended'})),
+                ...rejectedPlaces.map(p => ({...p, _status: 'rejected'}))
+            ];
+            document.getElementById('allPlacesTable').innerHTML = buildPlacesTable(all, 'all');
+        }
+
+        // ===== ADS MANAGEMENT =====
+        let currentAdImage = null;
+
+        function showAddAdModal() {
+            document.getElementById('adTitle').value = '';
+            document.getElementById('adLink').value = '';
+            document.getElementById('adImagePreview').style.display = 'none';
+            currentAdImage = null;
+            document.getElementById('adModal').classList.add('show');
+        }
+
+        function previewAdImage(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // Compress
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const maxW = 1200;
+                    let w = img.width, h = img.height;
+                    if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    currentAdImage = canvas.toDataURL('image/jpeg', 0.85);
+                    document.getElementById('adPreviewImg').src = currentAdImage;
+                    document.getElementById('adImagePreview').style.display = 'block';
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function saveAd() {
+            const title = document.getElementById('adTitle').value.trim();
+            if (!title) { showToast('أدخل عنوان الإعلان'); return; }
+            if (!currentAdImage) { showToast('ارفع صورة الإعلان'); return; }
+            if (ads.length >= 10) { showToast('الحد الأقصى 10 إعلانات'); return; }
+
+            const ad = {
+                id: Date.now(),
+                title,
+                link: document.getElementById('adLink').value.trim(),
+                image: currentAdImage,
+                active: true,
+                createdAt: new Date().toISOString()
+            };
+            ads.push(ad);
+            setAdminData('admin_ads', ads);
+            closeModal('adModal');
+            renderAds();
+            renderDashboard();
+            showToast('تم إضافة الإعلان ✅');
+        }
+
+        function removeAd(id) {
+            if (!confirm('هل أنت متأكد؟')) return;
+            ads = ads.filter(a => a.id !== id);
+            setAdminData('admin_ads', ads);
+            renderAds();
+            renderDashboard();
+            showToast('تم حذف الإعلان');
+        }
+
+        function toggleAd(id) {
+            const ad = ads.find(a => a.id === id);
+            if (ad) {
+                ad.active = !ad.active;
+                setAdminData('admin_ads', ads);
+                renderAds();
+            }
+        }
+
+        function renderAds() {
+            const grid = document.getElementById('adsGrid');
+            const empty = document.getElementById('emptyAds');
+            if (!ads.length) {
+                grid.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+            empty.style.display = 'none';
+            grid.innerHTML = ads.map(a => `
+                <div class="ad-preview-item" style="opacity:${a.active ? 1 : .5}">
+                    <button class="ad-remove" onclick="removeAd(${a.id})"><i class="fas fa-trash"></i></button>
+                    <img src="${a.image}" alt="${a.title}">
+                    <div class="ad-info">
+                        <h4>${a.title}</h4>
+                        ${a.link ? `<p>${a.link}</p>` : ''}
+                        <div style="margin-top:8px;display:flex;gap:6px">
+                            <button class="btn btn-sm ${a.active ? 'btn-suspend' : 'btn-approve'}" onclick="toggleAd(${a.id})">
+                                ${a.active ? '<i class="fas fa-pause"></i> إيقاف' : '<i class="fas fa-play"></i> تفعيل'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ===== CONTENT MANAGEMENT (Offers/Jobs/Courses) =====
+        let currentContentImage = null;
+
+        function showAddContentModal(type) {
+            document.getElementById('contentType').value = type;
+            const titles = { offer: 'إضافة عرض', job: 'إضافة وظيفة', course: 'إضافة دورة' };
+            document.getElementById('contentModalTitle').textContent = titles[type] || 'إضافة';
+            document.getElementById('contentTitle').value = '';
+            document.getElementById('contentDesc').value = '';
+            document.getElementById('contentPhone').value = '';
+            document.getElementById('contentLink').value = '';
+            document.getElementById('contentImagePreview').style.display = 'none';
+            currentContentImage = null;
+            document.getElementById('contentModal').classList.add('show');
+        }
+
+        function previewContentImage(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const maxW = 800;
+                    let w = img.width, h = img.height;
+                    if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    currentContentImage = canvas.toDataURL('image/jpeg', 0.8);
+                    document.getElementById('contentPreviewImg').src = currentContentImage;
+                    document.getElementById('contentImagePreview').style.display = 'block';
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function saveContent() {
+            const type = document.getElementById('contentType').value;
+            const title = document.getElementById('contentTitle').value.trim();
+            if (!title) { showToast('أدخل العنوان'); return; }
+
+            const storeMap = { offer: offers, job: jobs, course: courses };
+            const store = storeMap[type];
+            if (!store) return;
+
+            const item = {
+                id: Date.now(),
+                title,
+                desc: document.getElementById('contentDesc').value.trim(),
+                category: document.getElementById('contentCategory').value,
+                city: document.getElementById('contentCity').value,
+                phone: document.getElementById('contentPhone').value.trim(),
+                link: document.getElementById('contentLink').value.trim(),
+                image: currentContentImage,
+                active: true,
+                createdAt: new Date().toISOString()
+            };
+            store.push(item);
+            const keyMap = { offer: 'admin_offers', job: 'admin_jobs', course: 'admin_courses' };
+            setAdminData(keyMap[type], store);
+
+            closeModal('contentModal');
+            if (type === 'offer') renderOffers();
+            else if (type === 'job') renderJobs();
+            else renderCourses();
+            showToast('تمت الإضافة ✅');
+        }
+
+        function deleteContent(type, id) {
+            if (!confirm('هل أنت متأكد من الحذف؟')) return;
+            const keyMap = { offer: 'admin_offers', job: 'admin_jobs', course: 'admin_courses' };
+            const storeMap = { offer: () => offers = offers.filter(i => i.id !== id), job: () => jobs = jobs.filter(i => i.id !== id), course: () => courses = courses.filter(i => i.id !== id) };
+            storeMap[type]();
+            setAdminData(keyMap[type], type === 'offer' ? offers : type === 'job' ? jobs : courses);
+            if (type === 'offer') renderOffers();
+            else if (type === 'job') renderJobs();
+            else renderCourses();
+            showToast('تم الحذف');
+        }
+
+        function buildContentTable(items, type) {
+            if (!items.length) return '<div class="empty"><i class="fas fa-inbox"></i><p>لا توجد بيانات</p></div>';
+            return `<table>
+                <thead><tr><th>العنوان</th><th>الوصف</th><th>المدينة</th><th>الهاتف</th><th>إجراءات</th></tr></thead>
+                <tbody>${items.map(i => `<tr>
+                    <td><strong>${i.title}</strong>${i.image ? ' 🖼️' : ''}</td>
+                    <td>${(i.desc || '-').substring(0, 40)}${(i.desc || '').length > 40 ? '...' : ''}</td>
+                    <td>${i.city || '-'}</td>
+                    <td dir="ltr">${i.phone || '-'}</td>
+                    <td><div class="actions">
+                        <button class="btn btn-reject btn-sm" onclick="deleteContent('${type}',${i.id})"><i class="fas fa-trash"></i></button>
+                    </div></td>
+                </tr>`).join('')}</tbody>
+            </table>`;
+        }
+
+        function renderOffers() { document.getElementById('offersTable').innerHTML = buildContentTable(offers, 'offer'); }
+        function renderJobs() { document.getElementById('jobsTable').innerHTML = buildContentTable(jobs, 'job'); }
+        function renderCourses() { document.getElementById('coursesTable').innerHTML = buildContentTable(courses, 'course'); }
+
+        // ===== POPULATE SELECTS =====
+        function populateSelects() {
+            // Load from main site data
+            const catSelect = document.getElementById('contentCategory');
+            const citySelect = document.getElementById('contentCity');
+
+            // Try to read from the main site's data
+            const mainData = localStorage.getItem('yd_categories');
+            const mainCities = localStorage.getItem('yd_cities');
+
+            // Hardcoded fallback
+            const cats = ['مطاعم','فنادق','مقاهي','تسوق','صحة','تعليم','سيارات','عقارات','خدمات','صيدليات','مستشفيات','مكتبات'];
+            const cities = ['صنعاء','عدن','تعز','الحديدة','إب','لحج','الضالع','شبوة','المهرة','حجة','عمران','صعدة','الجوف','مأرب','ذمار','البيضاء','أبين','المحويت','سقطرى','حضرموت','ريمة'];
+
+            catSelect.innerHTML = '<option value="">اختر التصنيف</option>' + cats.map(c => `<option>${c}</option>`).join('');
+            citySelect.innerHTML = '<option value="">اختر المدينة</option>' + cities.map(c => `<option>${c}</option>`).join('');
+        }
+
+        // ===== SAVE & SYNC =====
+        function saveAll() {
+            setAdminData('admin_pending', pendingPlaces);
+            setAdminData('admin_approved', approvedPlaces);
+            setAdminData('admin_rejected', rejectedPlaces);
+            setAdminData('admin_suspended', suspendedPlaces);
+
+            // Sync approved places with main site's myPlaces
+            // The main site reads from 'yd_my_places'
+            const existingMyPlaces = getAdminData('yd_my_places', []);
+            // Merge: keep existing + add newly approved
+            const approvedIds = new Set(approvedPlaces.map(p => p.id));
+            const merged = [...existingMyPlaces.filter(p => !approvedIds.has(p.id)), ...approvedPlaces];
+            setAdminData('yd_my_places', merged);
+        }
+
+        function saveSettings() {
+            showToast('تم حفظ الإعدادات');
+        }
+
+        // ===== MODALS =====
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+        }
+
+        // Close modal on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(m => {
+            m.addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('show');
+            });
+        });
+
+        // ===== TOAST =====
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        // ===== LISTEN FOR NEW SUBMISSIONS =====
+        // Check for new pending places from main site
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'admin_pending') {
+                pendingPlaces = getAdminData('admin_pending', []);
+                renderDashboard();
+                renderPending();
+            }
+        });
+
+        // Also poll every 2 seconds for changes
+        setInterval(() => {
+            const newPending = getAdminData('admin_pending', []);
+            if (JSON.stringify(newPending) !== JSON.stringify(pendingPlaces)) {
+                pendingPlaces = newPending;
+                renderDashboard();
+                renderPending();
+            }
+        }, 2000);
+
+        // Init
+        init();
+    </script>
+</body>
+</html>

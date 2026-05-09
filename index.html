@@ -63,9 +63,9 @@
             <a href="#" class="nav-item" onclick="showAddPlace();return false">
                 <div class="nav-add-btn"><i class="fas fa-plus"></i></div>
             </a>
-            <a href="#" class="nav-item" onclick="showCities();return false">
-                <i class="fas fa-map-marker-alt"></i>
-                <span>المدن</span>
+            <a href="#" class="nav-item" onclick="showContentPage('offers');return false">
+                <i class="fas fa-tag"></i>
+                <span>العروض</span>
             </a>
             <a href="#" class="nav-item" onclick="showProfile();return false">
                 <i class="fas fa-user"></i>
@@ -131,13 +131,29 @@
                     <div class="categories-scroll" id="categoriesScroll"></div>
                 </div>
 
-                <!-- Cities Section -->
-                <div class="section">
+                <!-- Dynamic Sections: Offers, Jobs, Courses -->
+                <div class="section" id="section-offers" style="display:none">
                     <div class="section-header">
-                        <h3><i class="fas fa-city"></i> المدن</h3>
-                        <a href="#" onclick="showCities();return false">عرض الكل <i class="fas fa-arrow-left"></i></a>
+                        <h3><i class="fas fa-tag"></i> العروض</h3>
+                        <a href="#" onclick="showContentPage('offers');return false">عرض الكل <i class="fas fa-arrow-left"></i></a>
                     </div>
-                    <div class="cities-scroll" id="citiesScroll"></div>
+                    <div class="content-scroll" id="offersScroll"></div>
+                </div>
+
+                <div class="section" id="section-jobs" style="display:none">
+                    <div class="section-header">
+                        <h3><i class="fas fa-briefcase"></i> وظائف</h3>
+                        <a href="#" onclick="showContentPage('jobs');return false">عرض الكل <i class="fas fa-arrow-left"></i></a>
+                    </div>
+                    <div class="content-scroll" id="jobsScroll"></div>
+                </div>
+
+                <div class="section" id="section-courses" style="display:none">
+                    <div class="section-header">
+                        <h3><i class="fas fa-graduation-cap"></i> دورات</h3>
+                        <a href="#" onclick="showContentPage('courses');return false">عرض الكل <i class="fas fa-arrow-left"></i></a>
+                    </div>
+                    <div class="content-scroll" id="coursesScroll"></div>
                 </div>
 
                 <!-- Featured Places -->
@@ -390,6 +406,34 @@
                         </a>
                     </div>
                 </div>
+            </div>
+
+            <!-- Content Pages (Offers, Jobs, Courses) -->
+            <div id="page-offers" class="page">
+                <div class="page-header">
+                    <button class="back-btn" onclick="showHome()"><i class="fas fa-arrow-right"></i></button>
+                    <h2>العروض</h2>
+                </div>
+                <div class="content-cards" id="offersPageList"></div>
+                <div class="empty-state" id="emptyOffers" style="display:none"><i class="fas fa-tag"></i><h3>لا توجد عروض حالياً</h3><p>تابعنا للحصول على أحدث العروض</p></div>
+            </div>
+
+            <div id="page-jobs" class="page">
+                <div class="page-header">
+                    <button class="back-btn" onclick="showHome()"><i class="fas fa-arrow-right"></i></button>
+                    <h2>وظائف</h2>
+                </div>
+                <div class="content-cards" id="jobsPageList"></div>
+                <div class="empty-state" id="emptyJobs" style="display:none"><i class="fas fa-briefcase"></i><h3>لا توجد وظائف حالياً</h3><p>تابعنا للحصول على أحدث الوظائف</p></div>
+            </div>
+
+            <div id="page-courses" class="page">
+                <div class="page-header">
+                    <button class="back-btn" onclick="showHome()"><i class="fas fa-arrow-right"></i></button>
+                    <h2>دورات</h2>
+                </div>
+                <div class="content-cards" id="coursesPageList"></div>
+                <div class="empty-state" id="emptyCourses" style="display:none"><i class="fas fa-graduation-cap"></i><h3>لا توجد دورات حالياً</h3><p>تابعنا للحصول على أحدث الدورات</p></div>
             </div>
 
             <!-- Notifications Page -->

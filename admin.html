@@ -100,7 +100,7 @@
         /* Modal */
         .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center}
         .modal-overlay.show{display:flex}
-        .modal{background:#fff;border-radius:20px;width:90%;max-width:500px;max-height:90vh;overflow-y:auto;padding:24px}
+        .modal{background:#fff;border-radius:20px;width:90%;max-width:600px;max-height:90vh;overflow-y:auto;padding:24px}
         .modal h3{font-size:18px;font-weight:800;margin-bottom:16px}
         .modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-start}
 
@@ -360,6 +360,100 @@
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
+    <!-- Edit Place Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <h3><i class="fas fa-edit" style="color:#1565c0"></i> تعديل المكان</h3>
+            <input type="hidden" id="editPlaceId">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>اسم المكان *</label>
+                    <input type="text" id="editName">
+                </div>
+                <div class="form-group">
+                    <label>التصنيف *</label>
+                    <select id="editCategory"></select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>المدينة *</label>
+                    <select id="editCity"></select>
+                </div>
+                <div class="form-group">
+                    <label>العنوان</label>
+                    <input type="text" id="editAddr">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>الوصف</label>
+                <textarea id="editDesc" rows="3"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>رقم الهاتف</label>
+                    <input type="tel" id="editPhone">
+                </div>
+                <div class="form-group">
+                    <label>رقم واتساب</label>
+                    <input type="tel" id="editWhatsapp">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>ساعات العمل</label>
+                    <input type="text" id="editHours">
+                </div>
+                <div class="form-group">
+                    <label>التقييم</label>
+                    <input type="number" id="editRating" min="0" max="5" step="0.1">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>عدد التقييمات</label>
+                    <input type="number" id="editReviews" min="0">
+                </div>
+                <div class="form-group" style="display:flex;align-items:flex-end;gap:16px">
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                        <input type="checkbox" id="editVerified"> موثق
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                        <input type="checkbox" id="editFeatured"> مميز
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>رابط فيسبوك</label>
+                <input type="url" id="editFacebook">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>رابط انستغرام</label>
+                    <input type="url" id="editInstagram">
+                </div>
+                <div class="form-group">
+                    <label>رابط X</label>
+                    <input type="url" id="editTwitter">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>رابط تيك توك</label>
+                    <input type="url" id="editTiktok">
+                </div>
+                <div class="form-group">
+                    <label>الموقع الإلكتروني</label>
+                    <input type="url" id="editWebsite">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="savePlaceEdit()"><i class="fas fa-save"></i> حفظ التعديلات</button>
+                <button class="btn btn-delete" onclick="closeModal('editModal')">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ===== DATA MANAGEMENT =====
         // All data is stored in localStorage and synced with the main site
@@ -436,10 +530,13 @@
                         ${mode === 'pending' ? `
                             <button class="btn btn-approve btn-sm" onclick="approvePlace(${p.id})"><i class="fas fa-check"></i> قبول</button>
                             <button class="btn btn-reject btn-sm" onclick="rejectPlace(${p.id})"><i class="fas fa-times"></i> رفض</button>
+                            <button class="btn btn-sm" style="background:#e3f2fd;color:#1565c0" onclick="editPlace(${p.id})"><i class="fas fa-edit"></i></button>
                         ` : mode === 'approved' ? `
+                            <button class="btn btn-sm" style="background:#e3f2fd;color:#1565c0" onclick="editPlace(${p.id})"><i class="fas fa-edit"></i> تعديل</button>
                             <button class="btn btn-suspend btn-sm" onclick="suspendPlace(${p.id})"><i class="fas fa-pause"></i> تعليق</button>
                             <button class="btn btn-reject btn-sm" onclick="rejectPlace(${p.id})"><i class="fas fa-times"></i> إيقاف</button>
                         ` : mode === 'suspended' ? `
+                            <button class="btn btn-sm" style="background:#e3f2fd;color:#1565c0" onclick="editPlace(${p.id})"><i class="fas fa-edit"></i></button>
                             <button class="btn btn-approve btn-sm" onclick="approvePlace(${p.id})"><i class="fas fa-check"></i> تفعيل</button>
                             <button class="btn btn-reject btn-sm" onclick="rejectPlace(${p.id})"><i class="fas fa-times"></i> إيقاف نهائي</button>
                         ` : `
@@ -459,6 +556,140 @@
                 suspended: '<span class="badge-status badge-suspended"><i class="fas fa-pause"></i> معلّق</span>'
             };
             return map[status] || map.pending;
+        }
+
+        // ===== EDIT PLACE =====
+        function editPlace(id) {
+            // Find place in all data sources
+            const allPlaces = [...pendingPlaces, ...approvedPlaces, ...suspendedPlaces, ...rejectedPlaces];
+            let place = allPlaces.find(p => p.id === id);
+
+            // If not in admin data, check main site PLACES (read from data.js via iframe or hardcoded)
+            if (!place) {
+                // Try to read from the main site's localStorage
+                const mainPlaces = getAdminData('yd_place_overrides', {});
+                if (mainPlaces[id]) {
+                    place = mainPlaces[id];
+                }
+            }
+
+            if (!place) { showToast('المكان غير موجود'); return; }
+
+            document.getElementById('editPlaceId').value = id;
+            document.getElementById('editName').value = place.name || '';
+            document.getElementById('editAddr').value = place.addr || '';
+            document.getElementById('editDesc').value = place.desc || '';
+            document.getElementById('editPhone').value = place.phone || '';
+            document.getElementById('editWhatsapp').value = place.whatsapp || '';
+            document.getElementById('editHours').value = place.hours || '';
+            document.getElementById('editRating').value = place.rating || 0;
+            document.getElementById('editReviews').value = place.reviews || 0;
+            document.getElementById('editVerified').checked = place.verified || false;
+            document.getElementById('editFeatured').checked = place.featured || false;
+
+            // Social
+            const social = place.social || {};
+            document.getElementById('editFacebook').value = social.facebook || '';
+            document.getElementById('editInstagram').value = social.instagram || '';
+            document.getElementById('editTwitter').value = social.twitter || '';
+            document.getElementById('editTiktok').value = social.tiktok || '';
+            document.getElementById('editWebsite').value = social.website || '';
+
+            // Populate selects
+            const cats = ['مطاعم','فنادق','مقاهي','تسوق','صحة','تعليم','سيارات','عقارات','خدمات','صيدليات','مستشفيات','مكتبات'];
+            const cities = ['صنعاء','عدن','تعز','الحديدة','إب','لحج','الضالع','شبوة','المهرة','حجة','عمران','صعدة','الجوف','مأرب','ذمار','البيضاء','أبين','المحويت','سقطرى','حضرموت','ريمة'];
+            document.getElementById('editCategory').innerHTML = cats.map(c => `<option ${c === place.cat ? 'selected' : ''}>${c}</option>`).join('');
+            document.getElementById('editCity').innerHTML = cities.map(c => `<option ${c === place.city ? 'selected' : ''}>${c}</option>`).join('');
+
+            document.getElementById('editModal').classList.add('show');
+        }
+
+        function savePlaceEdit() {
+            const id = parseInt(document.getElementById('editPlaceId').value);
+            const updates = {
+                name: document.getElementById('editName').value.trim(),
+                cat: document.getElementById('editCategory').value,
+                city: document.getElementById('editCity').value,
+                addr: document.getElementById('editAddr').value.trim(),
+                desc: document.getElementById('editDesc').value.trim(),
+                phone: document.getElementById('editPhone').value.trim(),
+                whatsapp: document.getElementById('editWhatsapp').value.trim(),
+                hours: document.getElementById('editHours').value.trim(),
+                rating: parseFloat(document.getElementById('editRating').value) || 0,
+                reviews: parseInt(document.getElementById('editReviews').value) || 0,
+                verified: document.getElementById('editVerified').checked,
+                featured: document.getElementById('editFeatured').checked,
+                social: {}
+            };
+
+            // Build social object
+            const fb = document.getElementById('editFacebook').value.trim();
+            const ig = document.getElementById('editInstagram').value.trim();
+            const tw = document.getElementById('editTwitter').value.trim();
+            const tk = document.getElementById('editTiktok').value.trim();
+            const web = document.getElementById('editWebsite').value.trim();
+            if (fb) updates.social.facebook = fb;
+            if (ig) updates.social.instagram = ig;
+            if (tw) updates.social.twitter = tw;
+            if (tk) updates.social.tiktok = tk;
+            if (web) updates.social.website = web;
+            if (!Object.keys(updates.social).length) updates.social = null;
+
+            // Update in pending/approved/suspended/rejected
+            let found = false;
+            [pendingPlaces, approvedPlaces, suspendedPlaces, rejectedPlaces].forEach(arr => {
+                const idx = arr.findIndex(p => p.id === id);
+                if (idx > -1) {
+                    Object.assign(arr[idx], updates);
+                    found = true;
+                }
+            });
+
+            // Save overrides for main site PLACES array
+            const overrides = getAdminData('yd_place_overrides', {});
+            overrides[id] = updates;
+            setAdminData('yd_place_overrides', overrides);
+
+            if (found) saveAll();
+
+            closeModal('editModal');
+            renderDashboard(); renderPending(); renderAllPlaces();
+            showToast('تم حفظ التعديلات ✅');
+        }
+
+        function editMainPlace(id) {
+            // For editing places from the main PLACES array
+            document.getElementById('editPlaceId').value = id;
+
+            // Load existing overrides
+            const overrides = getAdminData('yd_place_overrides', {});
+            const override = overrides[id] || {};
+
+            // Use override data if exists
+            document.getElementById('editName').value = override.name || '';
+            document.getElementById('editAddr').value = override.addr || '';
+            document.getElementById('editDesc').value = override.desc || '';
+            document.getElementById('editPhone').value = override.phone || '';
+            document.getElementById('editWhatsapp').value = override.whatsapp || '';
+            document.getElementById('editHours').value = override.hours || '';
+            document.getElementById('editRating').value = override.rating || '';
+            document.getElementById('editReviews').value = override.reviews || '';
+            document.getElementById('editVerified').checked = override.verified || false;
+            document.getElementById('editFeatured').checked = override.featured || false;
+
+            const social = override.social || {};
+            document.getElementById('editFacebook').value = social.facebook || '';
+            document.getElementById('editInstagram').value = social.instagram || '';
+            document.getElementById('editTwitter').value = social.twitter || '';
+            document.getElementById('editTiktok').value = social.tiktok || '';
+            document.getElementById('editWebsite').value = social.website || '';
+
+            const cats = ['مطاعم','فنادق','مقاهي','تسوق','صحة','تعليم','سيارات','عقارات','خدمات','صيدليات','مستشفيات','مكتبات'];
+            const cities = ['صنعاء','عدن','تعز','الحديدة','إب','لحج','الضالع','شبوة','المهرة','حجة','عمران','صعدة','الجوف','مأرب','ذمار','البيضاء','أبين','المحويت','سقطرى','حضرموت','ريمة'];
+            document.getElementById('editCategory').innerHTML = '<option value="">بدون تغيير</option>' + cats.map(c => `<option ${c === override.cat ? 'selected' : ''}>${c}</option>`).join('');
+            document.getElementById('editCity').innerHTML = '<option value="">بدون تغيير</option>' + cities.map(c => `<option ${c === override.city ? 'selected' : ''}>${c}</option>`).join('');
+
+            document.getElementById('editModal').classList.add('show');
         }
 
         // ===== PLACE ACTIONS =====

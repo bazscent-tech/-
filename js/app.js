@@ -24,9 +24,21 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('splash').classList.add('hide');
         document.getElementById('app').style.display = 'block';
         setTimeout(() => document.getElementById('splash').remove(), 500);
+        applyPlaceOverrides();
         initApp();
     }, 2000);
 });
+
+// Apply admin overrides to PLACES array
+function applyPlaceOverrides() {
+    const overrides = JSON.parse(localStorage.getItem('yd_place_overrides') || '{}');
+    for (const [id, updates] of Object.entries(overrides)) {
+        const place = PLACES.find(p => p.id === parseInt(id));
+        if (place) {
+            Object.assign(place, updates);
+        }
+    }
+}
 
 function initApp() {
     renderStats();
@@ -828,5 +840,29 @@ setInterval(() => {
         myPlaces = JSON.parse(localStorage.getItem('yd_my_places') || '[]');
         renderFeaturedPlaces();
         renderLatestPlaces();
+    }
+
+    // Check for place overrides
+    const newOverrides = JSON.parse(localStorage.getItem('yd_place_overrides') || '{}');
+    applyPlaceOverrides();
+
+    // Check for new ads/offers/jobs/courses
+    const newAds = JSON.parse(localStorage.getItem('admin_ads') || '[]');
+    const newOffers = JSON.parse(localStorage.getItem('admin_offers') || '[]');
+    const newJobs = JSON.parse(localStorage.getItem('admin_jobs') || '[]');
+    const newCourses = JSON.parse(localStorage.getItem('admin_courses') || '[]');
+
+    if (JSON.stringify(newAds) !== JSON.stringify(adminAds)) {
+        adminAds = newAds;
+        initSlider();
+    }
+    if (JSON.stringify(newOffers) !== JSON.stringify(adminOffers) ||
+        JSON.stringify(newJobs) !== JSON.stringify(adminJobs) ||
+        JSON.stringify(newCourses) !== JSON.stringify(adminCourses)) {
+        adminOffers = newOffers;
+        adminJobs = newJobs;
+        adminCourses = newCourses;
+        renderDynamicSections();
+        renderContentPages();
     }
 }, 3000);

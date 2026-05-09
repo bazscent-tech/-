@@ -156,11 +156,16 @@ function renderPlacesList(containerId, places) {
             <div class="place-card-top">
                 <div class="place-card-img" style="background:linear-gradient(135deg,${color},${color}dd)"><i class="fas ${icon}"></i></div>
                 <div class="place-card-info">
-                    <div class="place-card-name">${p.name}</div>
+                    <div class="place-card-header">
+                        <div class="place-card-name">${p.name}</div>
+                        ${p.verified ? '<span class="place-card-verified-badge"><i class="fas fa-check-circle"></i> موثق</span>' : ''}
+                    </div>
                     <span class="place-card-cat" style="background:${color}15;color:${color}">${p.cat}</span>
                     <div class="place-card-loc"><i class="fas fa-map-marker-alt"></i> ${p.city} - ${p.addr}</div>
                     <div class="place-card-rating">
-                        ${getStars(p.rating)} <span>${p.rating}</span> <small>(${p.reviews})</small>
+                        <span class="stars-wrap">${getStars(p.rating)}</span>
+                        <span class="rating-num">${p.rating}</span>
+                        <small>(${p.reviews})</small>
                     </div>
                 </div>
             </div>
@@ -221,7 +226,6 @@ function showFavorites() {
 function showAddPlace() {
     showPage('add');
     document.querySelectorAll('.nav-item')[2].classList.add('active');
-    // Populate selects
     const catSelect = document.getElementById('addCategory');
     const citySelect = document.getElementById('addCity');
     catSelect.innerHTML = '<option value="">اختر التصنيف</option>' + CATEGORIES.map(c => `<option>${c.name}</option>`).join('');
@@ -282,6 +286,7 @@ function showPlaceDetail(id) {
     const color = cat ? cat.color : '#667eea';
     const icon = cat ? cat.icon : 'fa-store';
     const isFav = favorites.includes(p.id);
+
     document.getElementById('detailHeader').style.background = `linear-gradient(135deg,${color},${color}dd)`;
     document.getElementById('detailHeader').innerHTML = `
         <div class="detail-header-bg"><i class="fas ${icon}"></i></div>
@@ -290,24 +295,66 @@ function showPlaceDetail(id) {
             <button class="icon-btn white" onclick="toggleFavFromDetail()"><i class="fas fa-heart" style="${isFav ? 'color:#ff1744' : ''}"></i></button>
             <button class="icon-btn white" onclick="shareFromDetail()"><i class="fas fa-share-alt"></i></button>
         </div>`;
+
+    // Build social media links HTML
+    let socialHTML = '';
+    if (p.social) {
+        const socials = [];
+        if (p.social.facebook) socials.push(`<a href="${p.social.facebook}" target="_blank" class="social-icon facebook"><i class="fab fa-facebook-f"></i></a>`);
+        if (p.social.instagram) socials.push(`<a href="${p.social.instagram}" target="_blank" class="social-icon instagram"><i class="fab fa-instagram"></i></a>`);
+        if (p.social.twitter) socials.push(`<a href="${p.social.twitter}" target="_blank" class="social-icon twitter"><i class="fab fa-x-twitter"></i></a>`);
+        if (p.social.tiktok) socials.push(`<a href="${p.social.tiktok}" target="_blank" class="social-icon tiktok"><i class="fab fa-tiktok"></i></a>`);
+        if (p.social.youtube) socials.push(`<a href="${p.social.youtube}" target="_blank" class="social-icon youtube"><i class="fab fa-youtube"></i></a>`);
+        if (p.social.website) socials.push(`<a href="${p.social.website}" target="_blank" class="social-icon website"><i class="fas fa-globe"></i></a>`);
+        if (socials.length) {
+            socialHTML = `<div class="detail-social">${socials.join('')}</div>`;
+        }
+    }
+
+    // Build phone numbers HTML
+    let phonesHTML = '';
+    const phones = p.phones || [{ type: 'هاتف', number: p.phone }];
+    phonesHTML = phones.map(ph => `
+        <div class="detail-info-item">
+            <div class="detail-info-icon" style="background:#e8f5e9;color:#2e7d32"><i class="fas fa-phone"></i></div>
+            <div class="detail-info-text"><small>${ph.type || 'هاتف'}</small><b>${ph.number}</b></div>
+            <a href="tel:${ph.number}" class="detail-info-action"><i class="fas fa-phone"></i></a>
+        </div>
+    `).join('');
+
+    // Build images gallery HTML
+    let galleryHTML = '';
+    if (p.images && p.images.length) {
+        galleryHTML = `<div class="detail-gallery">
+            <h3><i class="fas fa-images"></i> صور المكان</h3>
+            <div class="gallery-scroll">
+                ${p.images.map(img => `<div class="gallery-item"><img src="${img}" alt="${p.name}" loading="lazy"></div>`).join('')}
+            </div>
+        </div>`;
+    }
+
     document.getElementById('detailContent').innerHTML = `
         <h2 class="detail-title">${p.name}</h2>
-        <span class="detail-cat" style="background:${color}15;color:${color}">${p.cat}</span>
-        ${p.verified ? '<span class="detail-cat" style="background:#e8f5e9;color:#2e7d32"><i class="fas fa-check-circle"></i> موثق</span>' : ''}
+        <div class="detail-badges">
+            <span class="detail-cat" style="background:${color}15;color:${color}">${p.cat}</span>
+            ${p.verified ? '<span class="detail-verified"><i class="fas fa-check-circle"></i> موثق</span>' : ''}
+        </div>
         <p class="detail-desc">${p.desc}</p>
+
         <div class="detail-rating">
             <div class="detail-rating-stars">${getStars(p.rating)}</div>
             <span class="detail-rating-num">${p.rating}</span>
             <span class="detail-rating-count">(${p.reviews} تقييم)</span>
         </div>
+
+        ${galleryHTML}
+
         <div class="detail-info">
-            <div class="detail-info-item">
-                <div class="detail-info-icon" style="background:#e8f5e9;color:#2e7d32"><i class="fas fa-phone"></i></div>
-                <div class="detail-info-text"><small>رقم الهاتف</small><b>${p.phone}</b></div>
-            </div>
+            ${phonesHTML}
             ${p.whatsapp ? `<div class="detail-info-item">
                 <div class="detail-info-icon" style="background:#e8f5e9;color:#25d366"><i class="fab fa-whatsapp"></i></div>
                 <div class="detail-info-text"><small>واتساب</small><b>${p.whatsapp}</b></div>
+                <a href="https://wa.me/967${p.whatsapp}" target="_blank" class="detail-info-action whatsapp"><i class="fab fa-whatsapp"></i></a>
             </div>` : ''}
             <div class="detail-info-item">
                 <div class="detail-info-icon" style="background:#e3f2fd;color:#1565c0"><i class="fas fa-map-marker-alt"></i></div>
@@ -318,6 +365,9 @@ function showPlaceDetail(id) {
                 <div class="detail-info-text"><small>ساعات العمل</small><b>${p.hours || 'غير محدد'}</b></div>
             </div>
         </div>
+
+        ${socialHTML}
+
         <div class="detail-buttons">
             <a href="tel:${p.phone}" class="detail-btn call"><i class="fas fa-phone"></i> اتصال</a>
             ${p.whatsapp ? `<a href="https://wa.me/967${p.whatsapp}" class="detail-btn whatsapp" target="_blank"><i class="fab fa-whatsapp"></i> واتساب</a>` : ''}
@@ -361,28 +411,178 @@ function shareFromDetail() {
     if (currentDetailId) sharePlace(currentDetailId);
 }
 
+// ===== IMAGE UPLOAD =====
+function handleImageUpload(input, previewId, callback) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Validate type
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!validTypes.includes(file.type)) {
+        showToast('نوع الملف غير مدعوم. استخدم JPG أو PNG أو WebP');
+        return;
+    }
+
+    // Max 5MB
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('حجم الصورة كبير جداً. الحد الأقصى 5MB');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        // Compress and resize
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const maxSize = 800;
+            let w = img.width;
+            let h = img.height;
+
+            if (w > maxSize || h > maxSize) {
+                if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+                else { w = Math.round(w * maxSize / h); h = maxSize; }
+            }
+
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+
+            const compressed = canvas.toDataURL('image/jpeg', 0.8);
+
+            if (previewId) {
+                const preview = document.getElementById(previewId);
+                if (preview) {
+                    preview.innerHTML = `<img src="${compressed}" alt="preview">`;
+                    preview.classList.add('has-image');
+                }
+            }
+
+            if (callback) callback(compressed);
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+// Multi-image upload for business gallery
+let uploadedImages = [];
+
+function handleMultiImageUpload(input) {
+    const files = Array.from(input.files);
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+    files.forEach(file => {
+        if (!validTypes.includes(file.type)) return;
+        if (file.size > 5 * 1024 * 1024) return;
+        if (uploadedImages.length >= 8) {
+            showToast('الحد الأقصى 8 صور');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const maxSize = 800;
+                let w = img.width;
+                let h = img.height;
+                if (w > maxSize || h > maxSize) {
+                    if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+                    else { w = Math.round(w * maxSize / h); h = maxSize; }
+                }
+                canvas.width = w;
+                canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                uploadedImages.push(canvas.toDataURL('image/jpeg', 0.8));
+                renderImagePreviews();
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function renderImagePreviews() {
+    const container = document.getElementById('imagePreviews');
+    if (!container) return;
+    container.innerHTML = uploadedImages.map((img, i) => `
+        <div class="img-preview-item">
+            <img src="${img}" alt="preview ${i + 1}">
+            <button class="img-preview-remove" onclick="removeUploadedImage(${i})"><i class="fas fa-times"></i></button>
+        </div>
+    `).join('');
+}
+
+function removeUploadedImage(index) {
+    uploadedImages.splice(index, 1);
+    renderImagePreviews();
+}
+
 // ===== ADD PLACE =====
 function submitNewPlace(e) {
     e.preventDefault();
+
+    // Collect phone numbers
+    const phoneEntries = document.querySelectorAll('.phone-entry');
+    const phones = [];
+    phoneEntries.forEach(entry => {
+        const type = entry.querySelector('.phone-type')?.value || 'هاتف';
+        const number = entry.querySelector('.phone-number')?.value?.trim();
+        if (number) phones.push({ type, number });
+    });
+
+    // Collect social links
+    const social = {};
+    const fbVal = document.getElementById('addFacebook')?.value?.trim();
+    const igVal = document.getElementById('addInstagram')?.value?.trim();
+    const twVal = document.getElementById('addTwitter')?.value?.trim();
+    const tkVal = document.getElementById('addTiktok')?.value?.trim();
+    const ytVal = document.getElementById('addYoutube')?.value?.trim();
+    const webVal = document.getElementById('addWebsite')?.value?.trim();
+    if (fbVal) social.facebook = fbVal;
+    if (igVal) social.instagram = igVal;
+    if (twVal) social.twitter = twVal;
+    if (tkVal) social.tiktok = tkVal;
+    if (ytVal) social.youtube = ytVal;
+    if (webVal) social.website = webVal;
+
+    const primaryPhone = phones.length ? phones[0].number : document.getElementById('addPhone')?.value || '';
+
     const newPlace = {
         id: Date.now(),
         name: document.getElementById('addName').value,
         cat: document.getElementById('addCategory').value,
         city: document.getElementById('addCity').value,
-        phone: document.getElementById('addPhone').value,
-        whatsapp: document.getElementById('addWhatsapp').value || '',
+        phone: primaryPhone,
+        phones: phones.length ? phones : [{ type: 'هاتف', number: primaryPhone }],
+        whatsapp: document.getElementById('addWhatsapp')?.value?.trim() || '',
         addr: document.getElementById('addAddress').value,
         rating: 0,
         reviews: 0,
         desc: document.getElementById('addDesc').value || 'مكان جديد',
-        hours: 'غير محدد',
+        hours: document.getElementById('addHours')?.value || 'غير محدد',
         verified: false,
         featured: false,
         lat: 0,
-        lng: 0
+        lng: 0,
+        social: Object.keys(social).length ? social : null,
+        images: uploadedImages.length ? [...uploadedImages] : [],
+        profileImage: null
     };
+
+    // Handle profile image if set
+    const profilePreview = document.getElementById('placeProfilePreview');
+    if (profilePreview && profilePreview.classList.contains('has-image')) {
+        const img = profilePreview.querySelector('img');
+        if (img) newPlace.profileImage = img.src;
+    }
+
     myPlaces.push(newPlace);
     localStorage.setItem('yd_my_places', JSON.stringify(myPlaces));
+    uploadedImages = [];
     document.getElementById('addForm').reset();
     showToast('تم إضافة المكان بنجاح! ✅');
     renderStats();
@@ -391,11 +591,73 @@ function submitNewPlace(e) {
     showHome();
 }
 
+// Dynamic phone number management
+let phoneCounter = 0;
+
+function addPhoneField() {
+    phoneCounter++;
+    const container = document.getElementById('phoneFields');
+    if (!container) return;
+
+    const div = document.createElement('div');
+    div.className = 'phone-entry';
+    div.id = `phone-entry-${phoneCounter}`;
+    div.innerHTML = `
+        <div class="phone-row">
+            <select class="phone-type form-input-sm">
+                <option value="هاتف">هاتف</option>
+                <option value="جوال">جوال</option>
+                <option value="أرضي">أرضي</option>
+                <option value="واتساب">واتساب</option>
+                <option value="رقم آخر">رقم آخر</option>
+            </select>
+            <input type="tel" class="phone-number form-input" placeholder="777123456">
+            <button type="button" class="btn-remove-phone" onclick="removePhoneField(${phoneCounter})"><i class="fas fa-times"></i></button>
+        </div>`;
+    container.appendChild(div);
+}
+
+function removePhoneField(id) {
+    const entry = document.getElementById(`phone-entry-${id}`);
+    if (entry) entry.remove();
+}
+
+// Profile image upload
+function uploadProfileImage() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/png,image/webp';
+    input.onchange = function() {
+        handleImageUpload(this, 'profileAvatarPreview', function(dataUrl) {
+            localStorage.setItem('yd_profile_image', dataUrl);
+            showToast('تم تحديث الصورة الشخصية ✅');
+        });
+    };
+    input.click();
+}
+
+// Load profile image on init
+function loadProfileImage() {
+    const saved = localStorage.getItem('yd_profile_image');
+    if (saved) {
+        const preview = document.getElementById('profileAvatarPreview');
+        if (preview) {
+            preview.innerHTML = `<img src="${saved}" alt="profile">`;
+            preview.classList.add('has-image');
+        }
+    }
+}
+
 // ===== HELPERS =====
 function getStars(r) {
-    let s = '';
-    for (let i = 1; i <= 5; i++) s += i <= Math.floor(r) ? '<i class="fas fa-star">' : i - 0.5 <= r ? '<i class="fas fa-star-half-alt">' : '<i class="far fa-star">';
-    return s;
+    const full = Math.floor(r);
+    const half = r - full >= 0.5 ? 1 : 0;
+    const empty = 5 - full - half;
+    let html = '';
+    for (let i = 0; i < full; i++) html += '<i class="fas fa-star"></i>';
+    if (half) html += '<i class="fas fa-star-half-alt"></i>';
+    for (let i = 0; i < empty; i++) html += '<i class="far fa-star"></i>';
+    return html;
 }
 
 function showToast(msg) {

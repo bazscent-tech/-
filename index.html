@@ -219,6 +219,16 @@
                     <h2>إضافة مكان</h2>
                 </div>
                 <form class="add-form" id="addForm" onsubmit="submitNewPlace(event)">
+                    <!-- Profile Image -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-camera"></i> صورة المكان</h3>
+                        <div class="img-upload-circle" id="placeProfilePreview" onclick="document.getElementById('placeProfileInput').click()">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                        <input type="file" id="placeProfileInput" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handleImageUpload(this, 'placeProfilePreview')">
+                        <p style="text-align:center;font-size:12px;color:#757575">اضغط لتغيير الصورة</p>
+                    </div>
+
                     <div class="form-section">
                         <h3><i class="fas fa-info-circle"></i> معلومات المكان</h3>
                         <div class="form-group">
@@ -235,7 +245,12 @@
                             <label>الوصف</label>
                             <textarea id="addDesc" rows="3" placeholder="وصف قصير للمكان..."></textarea>
                         </div>
+                        <div class="form-group">
+                            <label>ساعات العمل</label>
+                            <input type="text" id="addHours" placeholder="مثال: 8ص - 10م">
+                        </div>
                     </div>
+
                     <div class="form-section">
                         <h3><i class="fas fa-map-marker-alt"></i> الموقع</h3>
                         <div class="form-group">
@@ -249,17 +264,73 @@
                             <input type="text" id="addAddress" required placeholder="شارع، حي...">
                         </div>
                     </div>
+
                     <div class="form-section">
                         <h3><i class="fas fa-phone"></i> معلومات التواصل</h3>
-                        <div class="form-group">
-                            <label>رقم الهاتف *</label>
-                            <input type="tel" id="addPhone" required placeholder="777123456">
+                        <div class="phone-fields" id="phoneFields">
+                            <div class="phone-entry">
+                                <div class="phone-row">
+                                    <select class="phone-type form-input-sm">
+                                        <option value="هاتف">هاتف</option>
+                                        <option value="جوال">جوال</option>
+                                        <option value="أرضي">أرضي</option>
+                                    </select>
+                                    <input type="tel" class="phone-number form-input" id="addPhone" required placeholder="777123456">
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-group">
+                        <button type="button" class="btn-add-phone" onclick="addPhoneField()" style="margin-top:10px">
+                            <i class="fas fa-plus"></i> إضافة رقم جديد
+                        </button>
+                        <div class="form-group" style="margin-top:14px">
                             <label>رقم واتساب</label>
                             <input type="tel" id="addWhatsapp" placeholder="777123456">
                         </div>
                     </div>
+
+                    <!-- Social Media -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-share-alt"></i> وسائل التواصل الاجتماعي</h3>
+                        <div class="social-inputs">
+                            <div class="social-input-group">
+                                <i class="fab fa-facebook-f"></i>
+                                <input type="url" id="addFacebook" placeholder="رابط فيسبوك">
+                            </div>
+                            <div class="social-input-group">
+                                <i class="fab fa-instagram"></i>
+                                <input type="url" id="addInstagram" placeholder="رابط انستغرام">
+                            </div>
+                            <div class="social-input-group">
+                                <i class="fab fa-x-twitter"></i>
+                                <input type="url" id="addTwitter" placeholder="رابط X">
+                            </div>
+                            <div class="social-input-group">
+                                <i class="fab fa-tiktok"></i>
+                                <input type="url" id="addTiktok" placeholder="رابط تيك توك">
+                            </div>
+                            <div class="social-input-group">
+                                <i class="fab fa-youtube"></i>
+                                <input type="url" id="addYoutube" placeholder="رابط يوتيوب">
+                            </div>
+                            <div class="social-input-group">
+                                <i class="fas fa-globe"></i>
+                                <input type="url" id="addWebsite" placeholder="الموقع الإلكتروني">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gallery Upload -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-images"></i> صور المكان (最多 8)</h3>
+                        <div class="image-upload-area" onclick="document.getElementById('galleryInput').click()">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>اضغط لرفع الصور</p>
+                            <small>JPG, PNG, WebP — حد أقصى 5MB لكل صورة</small>
+                        </div>
+                        <input type="file" id="galleryInput" accept="image/jpeg,image/png,image/webp" multiple style="display:none" onchange="handleMultiImageUpload(this)">
+                        <div class="image-previews" id="imagePreviews"></div>
+                    </div>
+
                     <button type="submit" class="btn btn-primary btn-block">
                         <i class="fas fa-plus"></i> إضافة المكان
                     </button>
@@ -274,7 +345,10 @@
                 </div>
                 <div class="profile-content">
                     <div class="profile-header">
-                        <div class="profile-avatar"><i class="fas fa-user"></i></div>
+                        <div class="profile-avatar" id="profileAvatarPreview" onclick="uploadProfileImage()">
+                            <i class="fas fa-user"></i>
+                            <div class="profile-avatar-edit"><i class="fas fa-camera"></i></div>
+                        </div>
                         <h3>مستخدم دليل اليمن</h3>
                         <p>عضو منذ 2026</p>
                     </div>

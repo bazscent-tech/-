@@ -1,0 +1,9 @@
+{
+  "name": "yemen-directory",
+  "version": "4.2.31",
+  "description": "دليل اليمن - دليل الأعمال والخدمات الشامل",
+  "main": "index.html",
+  "author": "Platform",
+  "license": "MIT",
+  "keywords": ["yemen", "directory", "business", "دليل", "اليمن"]
+}
